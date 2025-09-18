@@ -44,7 +44,6 @@ public:
         res.con = this->con + o.con;
         return res;
     }
-
     void addBall() {
          this->b++; 
         }
@@ -288,7 +287,6 @@ int main() {
     try {
         string t1, t2;
         int ov, n, fb;
-
         cout << "Team A name: ";
         getline(cin, t1);
         cout << "Team B name: ";
