@@ -201,7 +201,7 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
                     cout << "\nNew bowler index: ";
                     cin >> this->bow;
                     if (cin.fail()) {
-                        cin.clear(); cin.ignore(10000, '\n');
+                        cin.clear(); cin.ignore(10, '\n');
                         cout << "Invalid index\n";
                         this->bow = -2;
                     }
@@ -363,4 +363,5 @@ int main() {
     }
     return 0;
 }
+
 
