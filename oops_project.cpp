@@ -127,7 +127,7 @@ public:
 };
 
 void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
-    cout << "\nStarting innings: " << bat.name << " batting\n";
+    cout << "\nStarting : " << bat.name << " batting\n";
     bat.tr = bat.wkt = bat.ob = bat.bb = 0;
     
     do {
@@ -135,7 +135,7 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
         cin >> this->str;
         if (cin.fail() || this->str < 0 || this->str >= bat.cnt) {
             cin.clear(); cin.ignore(10000, '\n');
-            cout << "Invalid index\n";
+            cout << "invalid \n";
             this->str = -1;
         }
     } while (this->str == -1);
@@ -363,3 +363,4 @@ int main() {
     }
     return 0;
 }
+
