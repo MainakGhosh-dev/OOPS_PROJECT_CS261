@@ -123,7 +123,8 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
         cout << "Enter striker index (0 to " << bat.cnt - 1 << "): ";
         cin >> this->str;
         if (cin.fail() || this->str < 0 || this->str >= bat.cnt) {
-            cin.clear(); cin.ignore(10, '\n');
+            cin.clear();
+            cin.ignore(10, '\n');
             cout << "Invalid\n";
             this->str = -1;
         }
@@ -134,7 +135,8 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
         cout << "enter non-striker index: ";
         cin >> this->ns;
         if (cin.fail()) {
-            cin.clear(); cin.ignore(10, '\n');
+            cin.clear(); 
+            cin.ignore(10, '\n');
             cout << "Invalid\n";
             this->ns = -1;
         }
@@ -145,8 +147,9 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
         cout << "Enter bowler index from " << bowl.name << " (0 to " << bowl.cnt - 1 << "): ";
         cin >> this->bow;
         if (cin.fail() || this->bow < 0 || this->bow >= bowl.cnt) {
-            cin.clear(); cin.ignore(10, '\n');
-            cout << "Invalid index\n";
+            cin.clear(); 
+            cin.ignore(10, '\n');
+            cout << "Invalid \n";
             this->bow = -1;
         }
     }
@@ -179,7 +182,8 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
             while (opt != 3) {
                 cout << "\n\n1. Show Batting\n2. Show Bowling\n3. Continue\nChoice: ";
                 if (!(cin >> opt)) {
-                    cin.clear(); cin.ignore(10, '\n');
+                    cin.clear(); 
+                    cin.ignore(10, '\n');
                     cout << "invalid\n";
                     continue;
                 }
@@ -197,7 +201,8 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
                     cout << "\nnew bowler index: ";
                     cin >> this->bow;
                     if (cin.fail()) {
-                        cin.clear(); cin.ignore(10, '\n');
+                        cin.clear(); 
+                        cin.ignore(10, '\n');
                         cout << "invalid \n";
                         this->bow = -2;
                     }
@@ -357,4 +362,5 @@ int main() {
     }
     return 0;
 }
+
 
