@@ -46,15 +46,7 @@ public:
     }
 };
 
-class Batsman : public Player {
-public:
-    Batsman(string n = "") : Player(n) {}
-};
 
-class Bowler : public Player {
-public:
-    Bowler(string n = "") : Player(n) {}
-};
 
 class Team : public Player {   
 public:
@@ -365,3 +357,4 @@ int main() {
     }
     return 0;
 }
+
