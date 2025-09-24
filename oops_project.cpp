@@ -105,7 +105,7 @@ public:
     int str, ns, bow;
 
     Match(string a, string b, int o, int pCnt)
-        : Team("Match",0), tA(a, pCnt), tB(b, pCnt) {
+        :  tA(a, pCnt), tB(b, pCnt) {
         ov = o;
         str = ns = bow = -1;
     }
@@ -364,6 +364,7 @@ int main() {
     }
     return 0;
 }
+
 
 
 
