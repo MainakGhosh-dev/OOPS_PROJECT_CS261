@@ -258,6 +258,8 @@ void Match::upsc(Team &bat, Team &bowl, int evt) {
 
         if (evt != 7) {
             bat.bb++;
+             ++batter;           
+            bowler.addBall(); 
             if (bat.bb % 6 == 0) {
                 bat.ob++;
                 bowler.ov++;
@@ -362,5 +364,6 @@ int main() {
     }
     return 0;
 }
+
 
 
