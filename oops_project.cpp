@@ -1,10 +1,37 @@
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include <vector>
 #include <numeric>
 #include <exception>
 using namespace std;
-class Player {
+
+class BaseStats {
+public:
+    virtual void showStats() {
+        cout << "Cricket Game";
+    }
+    virtual void announceWinner(const string& teamName) {
+        cout << "winner: " << teamName << endl;
+    }
+    virtual ~BaseStats() {}
+};
+
+class Batting : virtual public BaseStats {
+public:
+     void battingSkill() {
+        cout << "batting class\n";
+    }
+};
+
+class Bowling : virtual public BaseStats {
+public:
+    void bowlingSkill() {
+        cout << "bowling class\n";
+    }
+};
+
+class Player : public Batting, public Bowling {
 public:
     string name;
     int r, b, four, six, w, ov, con;
@@ -13,18 +40,14 @@ public:
         this->name = n;
         this->r = this->b = this->four = this->six = this->w = this->ov = this->con = 0;
     }
-    
-    inline int strikeRate()  {
-        if (this->b == 0) {
-            return 0;
-        }
+
+    virtual int strikeRate() {
+        if (this->b == 0) return 0;
         return (this->r * 100.0) / this->b;
     }
-    
-    inline int economy() {
-        if (this->ov == 0) {
-            return 0;
-        }
+
+    virtual int economy() {
+        if (this->ov == 0) return 0;
         return this->con / (int)this->ov;
     }
 
@@ -33,40 +56,30 @@ public:
         return *this;
     }
 
-    Player operator+(const Player& o) {
-        Player res("Combined");
-        res.r = this->r + o.r;
-        res.b = this->b + o.b;
-        res.four = this->four + o.four;
-        res.six = this->six + o.six;
-        res.w = this->w + o.w;
-        res.ov = this->ov + o.ov;
-        res.con = this->con + o.con;
-        return res;
+    void addBall() { this->b++; }
+    void addConceded(int runs) { this->con += runs; }
+
+    virtual void showStats() {
+        cout << "Player Stats: " << name << "  Runs: " << r << "  Balls: " << b << endl;
     }
-    void addBall() {
-         this->b++; 
-        }
-    void addConceded(int runs) {
-         this->con += runs; 
-        }
+
+    virtual ~Player() {}
 };
 
-class Team {
+class Team : public Player {
 public:
-    string name;
     Player* pl;
     int cnt;
     int tr, wkt, ob, bb;
-    Team(string n = "", int pCnt = 0) {
-        this->name = n;
+
+    Team(string n = "", int pCnt = 0) : Player(n) {
         this->cnt = pCnt;
         this->tr = this->wkt = this->ob = this->bb = 0;
         if (pCnt > 0) {
             try {
                 this->pl = new Player[pCnt];
             } catch (bad_alloc& e) {
-                cout << " error: "<<endl;
+                cout << " error: " << endl;
                 this->pl = nullptr;
                 this->cnt = 0;
             }
@@ -74,33 +87,38 @@ public:
             this->pl = nullptr;
         }
     }
+
     void addPlayer(string& pname, int idx) {
         this->pl[idx] = Player(pname);
-    }
-    void addPlayer( string& pname, int idx, int runs, int balls, int fours, int sixes) {
-        this->pl[idx] = Player(pname);
-        this->pl[idx].r = runs;
-        this->pl[idx].b = balls;
-        this->pl[idx].four = fours;
-        this->pl[idx].six = sixes;
     }
 
     void showb() {
         cout << "\nBatting " << this->name << "\n";
-        cout << "Name\tRuns\tBalls\t4s\t6s\tSR\n";
+        cout << "Name  Runs  Balls  4s  6s  SR\n";
         for (int i = 0; i < this->cnt; ++i) {
-            cout << this->pl[i].name << "\t" << this->pl[i].r << "\t" << this->pl[i].b << "\t" << this->pl[i].four << "\t" << this->pl[i].six << "\t" << this->pl[i].strikeRate() << "\n";
+            cout << this->pl[i].name << "  " << this->pl[i].r << "  " << this->pl[i].b << "  " 
+                 << this->pl[i].four << "  " << this->pl[i].six << "  " << this->pl[i].strikeRate() << "\n";
         }
     }
 
     void showbo() {
         cout << "\nBowling " << this->name << "\n";
-        cout << "Name\tOvers\tRuns\tWkts\tEco\n";
+        cout << "Name  Overs  Runs  Wkts  Eco\n";
         for (int i = 0; i < this->cnt; ++i) {
             if (this->pl[i].ov > 0) {
-                cout << this->pl[i].name << "\t" << this->pl[i].ov << "\t"<< this->pl[i].con << "\t"<< this->pl[i].w << "\t" << this->pl[i].economy() << "\n";
+                cout << this->pl[i].name << "  " << this->pl[i].ov << "  " << this->pl[i].con 
+                     << "  " << this->pl[i].w << "  " << this->pl[i].economy() << "\n";
             }
         }
+    }
+
+    
+    virtual void showStats() {
+        cout << "Team Stats: " << name << "  Total Runs: " << tr << "  Wickets: " << wkt << endl;
+    }
+
+    virtual void announceWinner(const string& teamName) {
+        cout << "🏆 Team " << teamName << " wins the match!\n";
     }
 
     ~Team() {
@@ -108,15 +126,14 @@ public:
     }
 };
 
-class Match {
+class Match : public Team {
 public:
     Team tA, tB;
     int ov;
     int str, ns, bow;
 
-    Match(string a, string b, int o, int pCnt) {
-        tA = Team(a, pCnt);
-        tB = Team(b, pCnt);
+    Match(string a, string b, int o, int pCnt)
+        : tA(a, pCnt), tB(b, pCnt) {
         ov = o;
         str = ns = bow = -1;
     }
@@ -127,65 +144,75 @@ public:
 };
 
 void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
-    cout << "\nStarting : " << bat.name << " batting\n";
+    cout << "\nstarting  " << bat.name << " batting\n";
     bat.tr = bat.wkt = bat.ob = bat.bb = 0;
-    
-    do {
-        cout << "Enter striker index (0-" << bat.cnt - 1 << "): ";
+
+    this->str = -1;
+    while (this->str == -1) {
+        cout << "Enter striker index (0 to " << bat.cnt - 1 << "): ";
         cin >> this->str;
         if (cin.fail() || this->str < 0 || this->str >= bat.cnt) {
-            cin.clear(); cin.ignore(10000, '\n');
-            cout << "invalid \n";
+            cin.clear();
+            cin.ignore(10, '\n');
+            cout << "Invalid\n";
             this->str = -1;
         }
-    } while (this->str == -1);
-    
-    do {
-        cout << "Enter non-striker index: ";
+    }
+
+    this->ns = -1;
+    while (this->ns == -1) {
+        cout << "enter non-striker index: ";
         cin >> this->ns;
         if (cin.fail()) {
-            cin.clear(); cin.ignore(100, '\n');
-            cout << "invalid \n";
+            cin.clear(); 
+            cin.ignore(10, '\n');
+            cout << "Invalid\n";
             this->ns = -1;
         }
-    } while (this->ns == -1);
+    }
 
-    do {
-        cout << "Enter bowler index from " << bowl.name << " (0-" << bowl.cnt - 1 << "): ";
+    this->bow = -1;
+    while (this->bow == -1) {
+        cout << "Enter bowler index from " << bowl.name << " (0 to " << bowl.cnt - 1 << "): ";
         cin >> this->bow;
         if (cin.fail() || this->bow < 0 || this->bow >= bowl.cnt) {
-            cin.clear(); cin.ignore(10000, '\n');
-            cout << "Invalid index\n";
+            cin.clear(); 
+            cin.ignore(10, '\n');
+            cout << "Invalid \n";
             this->bow = -1;
         }
-    } while (this->bow == -1);
+    }
 
     while (bat.ob < this->ov && bat.wkt < bat.cnt - 1) {
         int evt;
         cout << "\nBall " << bat.ob << "." << (bat.bb % 6) + 1;
-        cout << " - Enter event (0-6 runs, 7=wide, 9=wicket, 10=bye, 11=leg-bye) ";
-        
+        cout << " - Enter event (0-6 runs, 7=wide, 9=wicket, 10=bye, 11=leg-bye): ";
+
         if (!(cin >> evt)) {
             cin.clear(); cin.ignore(10, '\n');
             cout << "Invalid input\n";
             continue;
         }
+
         if (evt > 12) break;
+
         this->upsc(bat, bowl, evt);
 
         if (is2nd && this->checkEnd(bat, bowl, tgt, n)) {
             return;
         }
+
         if (bat.ob >= this->ov || bat.wkt >= bat.cnt - 1) {
             break;
         }
 
         if (bat.bb % 6 == 0 && bat.bb > 0) {
             int opt = 0;
-            do {
-                cout << "\n Over  \n1. Show Batting\n2. Show Bowling\n3. Continue\nChoice: ";
+            while (opt != 3) {
+                cout << "\n\n1. Show Batting\n2. Show Bowling\n3. Continue\nChoice: ";
                 if (!(cin >> opt)) {
-                    cin.clear(); cin.ignore(10, '\n');
+                    cin.clear(); 
+                    cin.ignore(10, '\n');
                     cout << "invalid\n";
                     continue;
                 }
@@ -195,17 +222,20 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
                 else if (opt == 2) {
                     bowl.showbo();
                 }
-            } while (opt != 3);
+            }
+
             if (bat.ob < ov) {
-                do {
-                    cout << "\nNew bowler index: ";
+                this->bow = -2;
+                while (this->bow == -2) {
+                    cout << "\nnew bowler index: ";
                     cin >> this->bow;
                     if (cin.fail()) {
-                        cin.clear(); cin.ignore(10, '\n');
-                        cout << "Invalid index\n";
+                        cin.clear(); 
+                        cin.ignore(10, '\n');
+                        cout << "invalid \n";
                         this->bow = -2;
                     }
-                } while (this->bow == -2);
+                }
             }
         }
     }
@@ -234,11 +264,11 @@ void Match::upsc(Team &bat, Team &bowl, int evt) {
             bowler.w++;
             if (bat.wkt < bat.cnt - 1) {
                 do {
-                    cout << "New batsman index: ";
+                    cout << "new batsman index: ";
                     cin >> this->str;
                     if (cin.fail() || this->str < 0 || this->str >= bat.cnt) {
-                        cin.clear(); cin.ignore(10000, '\n');
-                        cout << "Invalid index\n";
+                        cin.clear(); cin.ignore(10, '\n');
+                        cout << "invalid index\n";
                         this->str = -1;
                     }
                 } while (this->str == -1);
@@ -250,7 +280,7 @@ void Match::upsc(Team &bat, Team &bowl, int evt) {
                 cin.clear();
                 cin.ignore(10, '\n');
                 runs = 0;
-                cout << "Invalid\n";
+                cout << "invalid\n";
             }
             bat.tr += runs;
             bowler.addConceded(runs);
@@ -258,6 +288,8 @@ void Match::upsc(Team &bat, Team &bowl, int evt) {
 
         if (evt != 7) {
             bat.bb++;
+            ++batter;
+            bowler.addBall(); 
             if (bat.bb % 6 == 0) {
                 bat.ob++;
                 bowler.ov++;
@@ -310,7 +342,7 @@ int main() {
 
         Match match(t1, t2, ov, n);
 
-        cout << "\nTeam A players:\n";
+        cout << "\nTeam A players";
         for (int i = 0; i < n; i++) {
             string name;
             cout << "Player " << i << ": ";
@@ -318,7 +350,7 @@ int main() {
             match.tA.addPlayer(name, i);
         }
 
-        cout << "\nTeam B players:\n";
+        cout << "\nTeam B players:";
         for (int i = 0; i < n; i++) {
             string name;
             cout << "Player " << i << ": ";
@@ -326,13 +358,13 @@ int main() {
             match.tB.addPlayer(name, i);
         }
 
-        cout << "\nBat first? (1=" << t1 << ", 2=" << t2 << "): ";
+        cout << "\nbat first (1=" << t1 << ", 2=" << t2 << "):";
         cin >> fb;
         if (fb != 1 && fb != 2) {
-            cout << "Invalid. Setting to 1.\n";
+            cout << "invalid.\n";
             fb = 1;
         }
-        
+
         if (fb == 1) {
             match.sti(match.tA, match.tB);
             match.tA.showb();
@@ -348,20 +380,35 @@ int main() {
             match.tA.showb();
             match.tB.showbo();
         }
-        
+
         cout << "\nFinal Result \n";
+        BaseStats* bs;
         if (match.tA.tr > match.tB.tr) {
-            cout << "Team A won\n";
+            bs = &match.tA;
+            bs->announceWinner(match.tA.name);
         } else if (match.tB.tr > match.tA.tr) {
-            cout << "Team B won\n";
+            bs = &match.tB;
+            bs->announceWinner(match.tB.name);
         } else {
             cout << "Draw\n";
         }
+
+        cout << "\n\n--- Post-Match Summary (Runtime Polymorphism Demo) ---\n";
+        BaseStats* summary;
+
+        summary = &match.tA;
+        summary->showStats();
+
+        summary = &match.tB;
+        summary->showStats();
+
+        int sampleIndex = 0;
+        summary = &match.tA.pl[sampleIndex];
+        summary->showStats();
+
     } catch (const exception& e) {
         cout << "Error occurred\n";
         return 1;
     }
     return 0;
 }
-
-
