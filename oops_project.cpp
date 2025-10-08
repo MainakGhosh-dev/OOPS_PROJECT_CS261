@@ -11,7 +11,7 @@ public:
     virtual void showStats() {
         cout << "Cricket game.\n";
     }
-    virtual void announceWinner(const string& teamName) {
+    virtual void winner(string& teamName) {
         cout << "Winner: " << teamName << endl;
     }
     virtual ~BaseStats() {}
@@ -56,8 +56,12 @@ public:
         return *this;
     }
 
-    void addBall() { this->b++; }
-    void addConceded(int runs) { this->con += runs; }
+    void addBall() { 
+        this->b++; 
+    }
+    void addConceded(int runs) { 
+        this->con += runs; 
+    }
 
     virtual void showStats() {
         cout << "Player Stats: " << name << "  Runs: " << r << "  Balls: " << b << endl;
@@ -116,8 +120,8 @@ public:
         cout << "Team Stats: " << name << "  Total Runs: " << tr << "  Wickets: " << wkt << endl;
     }
 
-    virtual void announceWinner(const string& teamName) {
-        cout << "🏆 Team " << teamName << " wins the match!\n";
+    virtual void winner(string& teamName) {
+        cout << "Team " << teamName << " wins the match!\n";
     }
 
     ~Team() {
@@ -150,7 +154,7 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
     while (this->str == -1) {
         cout << "Enter striker index (0 to " << bat.cnt - 1 << "): ";
         cin >> this->str;
-        if (cin.fail() || this->str < 0 || this->str >= bat.cnt) {
+        if (cin.fail()) {
             cin.clear();
             cin.ignore(10, '\n');
             cout << "Invalid\n";
@@ -188,14 +192,17 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
         cout << " - Enter event (0-6 runs, 7=wide, 9=wicket, 10=bye, 11=leg-bye): ";
 
         if (!(cin >> evt)) {
-            cin.clear(); cin.ignore(10, '\n');
+            cin.clear(); 
+            cin.ignore(10,'\n');
             cout << "Invalid input\n";
             continue;
         }
 
-        if (evt > 12) break;
+        if (evt > 12){
+             break;
+        }    
 
-        this->upsc(bat, bowl, evt);
+        upsc(bat, bowl, evt);
 
         if (is2nd && this->checkEnd(bat, bowl, tgt, n)) {
             return;
@@ -384,15 +391,15 @@ int main() {
         BaseStats* bs;
         if (match.tA.tr > match.tB.tr) {
             bs = &match.tA;
-            bs->announceWinner(match.tA.name);
+            bs->winner(match.tA.name);
         } else if (match.tB.tr > match.tA.tr) {
             bs = &match.tB;
-            bs->announceWinner(match.tB.name);
+            bs->winner(match.tB.name);
         } else {
             cout << "Draw\n";
         }
 
-        cout << "\nPost-Match Summary \n";
+        cout << "\nSummary \n";
         BaseStats* summary;
 
         summary = &match.tA;
@@ -402,11 +409,10 @@ int main() {
         summary->showStats();
 
 
-    } catch (const exception& e) {
-        cout << "Error occurred\n";
+    } catch (exception& e) {
+        cout << "error\n";
         return 1;
     }
     return 0;
 }
-
 
