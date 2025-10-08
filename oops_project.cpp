@@ -20,14 +20,14 @@ public:
 class Batting : virtual public BaseStats {
 public:
     virtual void battingSkill() {
-        cout << "Displays batting performance summary.\n";
+        cout << "Displays batting class.\n";
     }
 };
 
 class Bowling : virtual public BaseStats {
 public:
     virtual void bowlingSkill() {
-        cout << "Displays bowling performance summary.\n";
+        cout << "Displays bowling class.\n";
     }
 };
 
@@ -408,4 +408,5 @@ int main() {
     }
     return 0;
 }
+
 
