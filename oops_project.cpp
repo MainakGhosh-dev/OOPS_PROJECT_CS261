@@ -401,9 +401,6 @@ int main() {
         summary = &match.tB;
         summary->showStats();
 
-        int sampleIndex = 0;
-        summary = &match.tA.pl[sampleIndex];
-        summary->showStats();
 
     } catch (const exception& e) {
         cout << "Error occurred\n";
@@ -411,3 +408,4 @@ int main() {
     }
     return 0;
 }
+
