@@ -111,8 +111,7 @@ public:
         cout << "\nBatting " << this->name << "\n";
         cout << "Name  Runs  Balls  4s  6s  SR\n";
         for (int i = 0; i < this->cnt; ++i) {
-            cout << this->pl[i].name << "  " << this->pl[i].r << "  " << this->pl[i].b << "  " 
-                 << this->pl[i].four << "  " << this->pl[i].six << "  " << this->pl[i].strikeRate() << "\n";
+            cout << this->pl[i].name << "  " << this->pl[i].r << "  " << this->pl[i].b << "  " << this->pl[i].four << "  " << this->pl[i].six << "  " << this->pl[i].strikeRate() << "\n";
         }
     }
 
@@ -195,7 +194,6 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
         if (cin.fail()) {
             cin.clear();
             cin.ignore(10, '\n');
-            throw invalid_argument("Invalid input");
         }
         if (this->str < 0 || this->str >= bat.cnt) {
             cout << "Invalid index\n";
@@ -247,7 +245,7 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
 
         upsc(bat, bowl, evt);
 
-        if (is2nd && this->checkEnd(bat, bowl, tgt, n)) {
+        if (is2nd && checkEnd(bat, bowl, tgt, n)) {
             return;
         }
 
@@ -340,7 +338,8 @@ void Match::upsc(Team &bat, Team &bowl, int evt) {
                     cout << "new batsman index: ";
                     cin >> this->str;
                     if (cin.fail() || this->str < 0 || this->str >= bat.cnt) {
-                        cin.clear(); cin.ignore(10, '\n');
+                        cin.clear(); 
+                        cin.ignore(10, '\n');
                         throw invalid_argument("Invalid batsman index");
                     }
                 } while (this->str == -1);
