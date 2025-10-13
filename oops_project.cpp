@@ -291,10 +291,12 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
             }
         }
     }
-    }catch (exception& e) {
-        cout << "Error: " << endl;
-    }catch (invalid_argument& e) {
-        cout << "error: " << endl;
+    } catch (const invalid_argument&) {
+        cout << "Invalid argument.\n";
+    } catch (const out_of_range&) {
+        cout << "Out of range error.\n";
+    } catch (const exception&) {
+        cout << "Error: an exception occurred.\n";
     }
 }
 
@@ -369,12 +371,12 @@ void Match::upsc(Team &bat, Team &bowl, int evt) {
                 swap(this->str,this->ns);
             }
         }
-    } catch (exception& e) {
-        cout << "Error: " << e.what() << endl;
-    }catch (invalid_argument& e) {
-        cout << "error: " << endl;
-    }catch (out_of_range& e) {
-        cout << "Out of range error: "  << endl;
+    } catch (const invalid_argument&) {
+        cout << "Invalid argument.\n";
+    } catch (const out_of_range&) {
+        cout << "Out of range error.\n";
+    } catch (const exception&) {
+        cout << "Error: an exception occurred.\n";
     }
 }
 
@@ -516,12 +518,14 @@ int main() {
         summary = &match.tB;
         summary->showStats();
 
-    } catch (exception& e) {
-        cout << " error: " << e.what() << endl;
+    } catch (const invalid_argument&) {
+        cout << "Invalid input detected.\n";
         return 1;
-    }catch (invalid_argument& e) {
-        cout << "Invalid  " << endl;
+    } catch (const exception&) {
+        cout << "An unexpected error occurred.\n";
         return 1;
     }
+
+
     return 0;
 }
