@@ -4,6 +4,7 @@
 #include <vector>
 #include <numeric>
 #include <exception>
+#include <stdexcept>
 using namespace std;
 
 class BaseStats {
@@ -11,27 +12,23 @@ public:
     virtual void showStats() {
         cout << "Cricket game.\n";
     }
-    virtual void winner(string& teamName) {
-        cout << "Winner: " << teamName << endl;
-    }
-    virtual ~BaseStats() {}
-};
 
-class Batting : virtual public BaseStats {
-public:
-    virtual void battingSkill() {
-        cout << "Displays batting class.\n";
-    }
-};
 
-class Bowling : virtual public BaseStats {
-public:
-    virtual void bowlingSkill() {
-        cout << "Displays bowling class.\n";
+    virtual void winner(string& teamName, int margin) {
+        cout << "Team " << teamName << " wins by " << margin << " runs/wickets!\n";
+    }
+
+    virtual void winner() {
+        cout << "The match ended in a draw!\n";
+    }
+
+    virtual ~BaseStats() {
+
     }
 };
 
-class Player : public Batting, public Bowling {
+
+class Player : public BaseStats {
 public:
     string name;
     int r, b, four, six, w, ov, con;
@@ -40,7 +37,12 @@ public:
         this->name = n;
         this->r = this->b = this->four = this->six = this->w = this->ov = this->con = 0;
     }
-
+    void resetBowlingStats() {
+        this->w = 0;
+        this->ov = 0;
+        this->con = 0;
+        this->b = 0;  
+    }
     virtual int strikeRate() {
         if (this->b == 0) return 0;
         return (this->r * 100.0) / this->b;
@@ -70,6 +72,7 @@ public:
     virtual ~Player() {}
 };
 
+
 class Team : public Player {
 public:
     Player* pl;
@@ -83,9 +86,8 @@ public:
             try {
                 this->pl = new Player[pCnt];
             } catch (bad_alloc& e) {
-                cout << " error: " << endl;
-                this->pl = nullptr;
-                this->cnt = 0;
+                cout << " allocation fail" << endl;
+                throw runtime_error("allocate fail");
             }
         } else {
             this->pl = nullptr;
@@ -93,9 +95,18 @@ public:
     }
 
     void addPlayer(string& pname, int idx) {
+        if (idx < 0 || idx >= this->cnt) {
+            throw out_of_range("Invalid player index");
+        }
         this->pl[idx] = Player(pname);
     }
-
+    
+    void resetBowling() {
+        for (int i = 0; i < this->cnt; ++i) {
+            this->pl[i].resetBowlingStats();
+        }
+    }
+    
     void showb() {
         cout << "\nBatting " << this->name << "\n";
         cout << "Name  Runs  Balls  4s  6s  SR\n";
@@ -109,9 +120,21 @@ public:
         cout << "\nBowling " << this->name << "\n";
         cout << "Name  Overs  Runs  Wkts  Eco\n";
         for (int i = 0; i < this->cnt; ++i) {
-            if (this->pl[i].ov > 0) {
-                cout << this->pl[i].name << "  " << this->pl[i].ov << "  " << this->pl[i].con 
-                     << "  " << this->pl[i].w << "  " << this->pl[i].economy() << "\n";
+            if (this->pl[i].b > 0) {
+                int completedOvers = this->pl[i].b / 6;
+                int remainingBalls = this->pl[i].b % 6;
+                cout << this->pl[i].name << "  " << completedOvers;
+                if (remainingBalls > 0) {
+                    cout << "." << remainingBalls;
+                }
+                cout << "  " << this->pl[i].con 
+                     << "  " << this->pl[i].w << "  ";
+                if (this->pl[i].b > 0) {
+                    cout << (this->pl[i].con * 6.0) / this->pl[i].b;
+                } else {
+                    cout << 0;
+                }
+                cout << "\n";
             }
         }
     }
@@ -123,11 +146,17 @@ public:
     virtual void winner(string& teamName) {
         cout << "Team " << teamName << " wins the match!\n";
     }
+    void winner(string& teamName, int margin) override {
+    cout << " " << teamName << " wins magnificently by " << margin << " runs/wickets!\n";
+}
 
     ~Team() {
         delete[] pl;
     }
+
+    friend void manOfTheMatch(Team& t1, Team& t2);
 };
+
 
 class Match : public Team {
 public:
@@ -137,6 +166,12 @@ public:
 
     Match(string a, string b, int o, int pCnt)
         : tA(a, pCnt), tB(b, pCnt) {
+        if (o <= 0) {
+            throw invalid_argument("Overs must be greater than 0");
+        }
+        if (pCnt <= 1) {
+            throw invalid_argument("Players must be greater than 1");
+        }
         ov = o;
         str = ns = bow = -1;
     }
@@ -146,10 +181,13 @@ public:
     bool checkEnd(Team &bat, Team &bowl, int tgt, int n);
 };
 
-void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
-    cout << "\nstarting  " << bat.name << " batting\n";
-    bat.tr = bat.wkt = bat.ob = bat.bb = 0;
 
+
+void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
+    try{
+        cout << "\nstarting  " << bat.name << " batting\n";
+    bat.tr = bat.wkt = bat.ob = bat.bb = 0;
+    bowl.resetBowling(); 
     this->str = -1;
     while (this->str == -1) {
         cout << "Enter striker index (0 to " << bat.cnt - 1 << "): ";
@@ -157,7 +195,10 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
         if (cin.fail()) {
             cin.clear();
             cin.ignore(10, '\n');
-            cout << "Invalid\n";
+            throw invalid_argument("Invalid input");
+        }
+        if (this->str < 0 || this->str >= bat.cnt) {
+            cout << "Invalid index\n";
             this->str = -1;
         }
     }
@@ -169,7 +210,10 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
         if (cin.fail()) {
             cin.clear(); 
             cin.ignore(10, '\n');
-            cout << "Invalid\n";
+            throw invalid_argument("Invalid input");
+        }
+        if (this->ns < 0 || this->ns >= bat.cnt) {
+            cout << "Invalid index\n";
             this->ns = -1;
         }
     }
@@ -178,7 +222,7 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
     while (this->bow == -1) {
         cout << "Enter bowler index from " << bowl.name << " (0 to " << bowl.cnt - 1 << "): ";
         cin >> this->bow;
-        if (cin.fail() || this->bow < 0 || this->bow >= bowl.cnt) {
+        if (cin.fail()) {
             cin.clear(); 
             cin.ignore(10, '\n');
             cout << "Invalid \n";
@@ -194,8 +238,7 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
         if (!(cin >> evt)) {
             cin.clear(); 
             cin.ignore(10,'\n');
-            cout << "Invalid input\n";
-            continue;
+            throw invalid_argument("Invalid input");
         }
 
         if (evt > 12){
@@ -238,44 +281,65 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
                     if (cin.fail()) {
                         cin.clear(); 
                         cin.ignore(10, '\n');
-                        cout << "invalid \n";
+                        throw invalid_argument("Invalid bowler input");
+                    }
+                    if (this->bow < 0 || this->bow >= bowl.cnt) {
+                        cout << "invalid index\n";
                         this->bow = -2;
                     }
                 }
             }
         }
     }
+    }catch (exception& e) {
+        cout << "Error: " << endl;
+    }catch (invalid_argument& e) {
+        cout << "error: " << endl;
+    }
 }
+
 
 void Match::upsc(Team &bat, Team &bowl, int evt) {
     try {
+        if (this->str < 0 || this->str >= bat.cnt) {
+            throw out_of_range("Invalid striker index");
+        }
+        if (this->bow < 0 || this->bow >= bowl.cnt) {
+            throw out_of_range("Invalid bowler index");
+        }
+        
         Player &batter = bat.pl[this->str];
         Player &bowler = bowl.pl[this->bow];
         int runs = 0;
-
+        bool islegal=false;
+        
         if (evt >= 0 && evt <= 6) {
             batter.r += evt;
-            ++batter;
             bat.tr += evt;
             bowler.addConceded(evt);
             if (evt == 4) batter.four++;
             if (evt == 6) batter.six++;
             runs = evt;
+            ++batter;  
+            ++bowler;  
+            islegal=true;
         } else if (evt == 7) {
             bat.tr += 1;
             bowler.addConceded(1);
+            islegal=false;
         } else if (evt == 9) {
             bat.wkt++;
-            ++batter;
             bowler.w++;
+            ++batter;
+            ++bowler;  
+            islegal=true;
             if (bat.wkt < bat.cnt - 1) {
                 do {
                     cout << "new batsman index: ";
                     cin >> this->str;
                     if (cin.fail() || this->str < 0 || this->str >= bat.cnt) {
                         cin.clear(); cin.ignore(10, '\n');
-                        cout << "invalid index\n";
-                        this->str = -1;
+                        throw invalid_argument("Invalid batsman index");
                     }
                 } while (this->str == -1);
             }
@@ -285,27 +349,32 @@ void Match::upsc(Team &bat, Team &bowl, int evt) {
             if (!cin) {
                 cin.clear();
                 cin.ignore(10, '\n');
-                runs = 0;
-                cout << "invalid\n";
+                throw invalid_argument("Invalid runs input");
             }
             bat.tr += runs;
-            bowler.addConceded(runs);
+            ++batter;
+            ++bowler;  
+            islegal=true;
+        } else {
+            throw invalid_argument("Invalid event type");
         }
 
-        if (evt != 7) {
+        if(islegal){
             bat.bb++;
-            ++batter;
-            bowler.addBall(); 
-            if (bat.bb % 6 == 0) {
+            if(runs% 2 != 0){
+                swap(this->str, this->ns);
+            }
+            if(bat.bb%6==0){
                 bat.ob++;
-                bowler.ov++;
-                swap(this->str, this->ns);
-            } else if (runs % 2 != 0) {
-                swap(this->str, this->ns);
+                swap(this->str,this->ns);
             }
         }
     } catch (exception& e) {
-        cout << "Error" << endl;
+        cout << "Error: " << e.what() << endl;
+    }catch (invalid_argument& e) {
+        cout << "error: " << endl;
+    }catch (out_of_range& e) {
+        cout << "Out of range error: "  << endl;
     }
 }
 
@@ -314,11 +383,42 @@ bool Match::checkEnd(Team &bat, Team &bowl, int tgt, int n) {
         cout << "\nResult\n" << bat.name << " won by " << (n - bat.wkt - 1) << " wickets\n";
         return true;
     }
-    if (bat.wkt >= n - 1 && bat.tr <= tgt) {
-        cout << "\nResult\n" << bowl.name << " won by " << (tgt - bat.tr) << " runs\n";
-        return true;
+    if (bat.ob >= this->ov || bat.wkt >= n - 1) {
+        if (bat.tr <= tgt) {
+            cout << "\nResult\n" << bowl.name << " won by " << (tgt - bat.tr) << " runs\n";
+            return true;
+        }
     }
     return false;
+}
+
+
+
+void manOfTheMatch(Team& t1, Team& t2) {
+    Player bp;
+    string tn;
+    int maxRuns = 0, maxWickets = 0;
+
+    for (int i = 0; i < t1.cnt; ++i) {
+        if (t1.pl[i].r > maxRuns || t1.pl[i].w > maxWickets) {
+            bp = t1.pl[i];
+            tn = t1.name;
+            maxRuns = t1.pl[i].r;
+            maxWickets = t1.pl[i].w;
+        }
+    }
+
+    for (int i = 0; i < t2.cnt; ++i) {
+        if (t2.pl[i].r > maxRuns || t2.pl[i].w > maxWickets) {
+            bp = t2.pl[i];
+            tn = t2.name;
+            maxRuns = t2.pl[i].r;
+            maxWickets = t2.pl[i].w;
+        }
+    }
+
+    cout << "\n Man of the Match: " << bp.name << " " << tn<< "\n";
+    cout << "Runs: " << bp.r << " | Wickets: " << bp.w << endl;
 }
 
 int main() {
@@ -329,20 +429,21 @@ int main() {
         getline(cin, t1);
         cout << "Team B name: ";
         getline(cin, t2);
+        
         cout << "Total overs: ";
         cin >> ov;
         if (!cin || ov <= 0) {
-            cout << "Invalid\n";
-            ov = 1;
             cin.clear();
             cin.ignore(10, '\n');
+            throw invalid_argument("Invalid overs input");
         }
 
         cout << "Players per team: ";
         cin >> n;
-        if (n <= 1) {
-            cout << "Invalid\n";
-            n = 2;
+        if (!cin || n <= 1) {
+            cin.clear();
+            cin.ignore(10, '\n');
+            throw invalid_argument("Invalid players count");
         }
         cin.ignore();
 
@@ -367,8 +468,7 @@ int main() {
         cout << "\nbat first (1=" << t1 << ", 2=" << t2 << "):";
         cin >> fb;
         if (fb != 1 && fb != 2) {
-            cout << "invalid.\n";
-            fb = 1;
+            throw invalid_argument("Invalid batting first choice");
         }
 
         if (fb == 1) {
@@ -389,15 +489,23 @@ int main() {
 
         cout << "\nFinal Result \n";
         BaseStats* bs;
+
         if (match.tA.tr > match.tB.tr) {
             bs = &match.tA;
-            bs->winner(match.tA.name);
-        } else if (match.tB.tr > match.tA.tr) {
+            int margin = match.tA.tr - match.tB.tr;
+            bs->winner(match.tA.name, margin);
+        } 
+        else if (match.tB.tr > match.tA.tr) {
             bs = &match.tB;
-            bs->winner(match.tB.name);
-        } else {
-            cout << "Draw\n";
+            int margin = match.tB.tr - match.tA.tr;
+            bs->winner(match.tB.name, margin);
+        } 
+        else {
+            bs = &match.tA;
+            bs->winner();
         }
+
+        manOfTheMatch(match.tA, match.tB);
 
         cout << "\nSummary \n";
         BaseStats* summary;
@@ -408,11 +516,12 @@ int main() {
         summary = &match.tB;
         summary->showStats();
 
-
     } catch (exception& e) {
-        cout << "error\n";
+        cout << " error: " << e.what() << endl;
+        return 1;
+    }catch (invalid_argument& e) {
+        cout << "Invalid  " << endl;
         return 1;
     }
     return 0;
 }
-
