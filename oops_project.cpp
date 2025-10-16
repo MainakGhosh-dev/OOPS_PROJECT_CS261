@@ -223,24 +223,45 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
         if (cin.fail()) {
             cin.clear(); 
             cin.ignore(10, '\n');
-            cout << "Invalid \n";
-            this->bow = -1;
-        }
+            throw invalid_argument("Invalid input");
+        }    
+            if(this->bow<0 || this->bow >= bowl.cnt){
+                
+                cout<<"Invalid index";
+                this->bow = -1;
+            }
+            
+        
     }
 
     while (bat.ob < this->ov && bat.wkt < bat.cnt - 1) {
-        int evt;
-        cout << "\nBall " << bat.ob << "." << (bat.bb % 6) + 1;
-        cout << " - Enter event (0-6 runs, 7=wide, 9=wicket, 10=bye, 11=leg-bye): ";
+        int evt = -1; 
+        while (true) {
+            cout << "\nBall " << bat.ob << "." << (bat.bb % 6) + 1;
+            cout << " - Enter event (0-6 runs, 7=wide, 9=wicket, 10=bye, 11=leg-bye): ";
 
-        if (!(cin >> evt)) {
-            cin.clear(); 
-            cin.ignore(10,'\n');
-            throw invalid_argument("Invalid input");
+            cin >> evt;
+
+            if (cin.fail()) {
+                cin.clear();
+                cin.ignore(10, '\n');
+                cout << "Invalid input.\n";
+                continue; 
+            }
+
+            if (evt < 0 || evt > 12) {
+                cout << "Invalid index.\n";
+                continue; 
+            }
+
+            
+            break;
         }
 
+        
+
         if (evt > 12){
-             break;
+             throw out_of_range("Invalid input");
         }    
 
         upsc(bat, bowl, evt);
@@ -294,7 +315,7 @@ void Match::sti(Team &bat, Team &bowl, bool is2nd, int tgt, int n) {
     } catch (const out_of_range&) {
         cout << "Out of range error.\n";
     } catch (const exception&) {
-        cout << "Error: an exception occurred.\n";
+        cout << "Error:exception occurred.\n";
     }
 }
 
@@ -312,7 +333,13 @@ void Match::upsc(Team &bat, Team &bowl, int evt) {
         Player &bowler = bowl.pl[this->bow];
         int runs = 0;
         bool islegal=false;
-        
+       
+
+
+
+        if(evt>=12){
+            throw out_of_range("Invalid player index");
+        }
         if (evt >= 0 && evt <= 6) {
             batter.r += evt;
             bat.tr += evt;
